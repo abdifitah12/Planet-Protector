@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import RequestsAdmin from "../components/RequestsAdmin.jsx";
 
 // Set a password in .env.local: VITE_ADMIN_PASSWORD=secret123
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD ?? "changeme";
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD ?? "abdi123";
 
 export default function Admin() {
   const [ok, setOk] = useState(() => localStorage.getItem("admin-ok") === "1");
