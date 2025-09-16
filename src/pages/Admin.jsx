@@ -49,8 +49,8 @@ export default function Admin() {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/logo.svg" className="h-8 w-8" alt="logo" />
-            <span className="text-lg font-semibold">Trash Clean — Admin</span>
+            <img src="/bg.png" className="h-8 w-8" alt="logo" />
+            <span className="text-lg font-semibold">Planet Protector</span>
           </div>
           <div className="flex items-center gap-3">
             <a href="/" className="rounded-full border px-3 py-1 text-sm hover:bg-slate-50">Public Site</a>

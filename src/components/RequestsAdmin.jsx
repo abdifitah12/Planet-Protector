@@ -81,10 +81,7 @@ export default function RequestsAdmin() {
     <section id="requests" className="py-16 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold text-slate-900">Requests</h2>
-            <p className="text-slate-600">View, filter, and update contact requests.</p>
-          </div>
+        
           <button onClick={() => resetAndReload()}
             className="rounded-full border px-4 py-2 text-sm hover:bg-slate-50">
             Refresh
