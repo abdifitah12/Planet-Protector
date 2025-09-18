@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   listContacts, listByStatus, listStatusNotDone,
-  findByPhone, getContact, toggleStatus
+  findByPhone, getContact, toggleStatus, deleteContact
 } from "../api";
 import StatusBadge from "./StatusBadge.jsx";
 
@@ -76,6 +76,21 @@ export default function RequestsAdmin() {
       setBusy(false);
     }
   }
+
+  async function onDelete(id) {
+  if (!confirm(`Delete request #${id}? This cannot be undone.`)) return;
+  setBusy(true);
+  try {
+    await deleteContact(id);
+    setFlash({ type: "success", text: `Deleted #${id}` });
+    resetAndReload();
+  } catch (e) {
+    setFlash({ type: "error", text: e.message || "Failed to delete" });
+  } finally {
+    setBusy(false);
+  }
+}
+
 
   return (
     <section id="requests" className="py-16 bg-white">
@@ -159,8 +174,14 @@ export default function RequestsAdmin() {
                         className="rounded-full border px-3 py-1 text-xs hover:bg-slate-100">View</button>
                       <button onClick={() => onToggle(c.id)}
                         className="rounded-full bg-emerald-600 text-white px-3 py-1 text-xs hover:bg-emerald-700">
-                        Toggle Status
+                        Status
                       </button>
+                      <button
+                        onClick={() => onDelete(c.id)}
+                        className="rounded-full bg-red-600 text-white px-3 py-1 text-xs hover:bg-red-700">
+                        Delete
+                      </button>
+
                     </div>
                   </td>
                 </tr>

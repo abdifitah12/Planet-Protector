@@ -55,3 +55,14 @@ export async function toggleStatus(id) {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+ // src/api.js
+export async function deleteContact(id) {
+  const res = await fetch(`${API_BASE}/api/contacts/delete/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json(); // your controller returns List<Contact>
+}
+
+

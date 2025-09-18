@@ -22,7 +22,7 @@ const Nav = () => (
         <a href="#contact" className="hover:text-emerald-700">Contact</a>
       </nav>
       <a href="#contact" className="ml-4 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700">
-        Schedule Service <ArrowRight />
+        Schedule 
       </a>
     </div>
   </header>
@@ -56,13 +56,13 @@ const Home = () => (
           href="#contact"
           className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-8 py-3 text-lg font-medium text-white shadow-lg hover:bg-emerald-700 hover:shadow-xl transition"
         >
-          Book Now <ArrowRight />
+          Book<ArrowRight />
         </a>
         <a
           href="#services"
           className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-8 py-3 text-lg font-medium text-slate-700 hover:bg-slate-50 transition"
         >
-          View Services
+          Services
         </a>
       </div>
 
