@@ -63,10 +63,17 @@ export default function ContactForm() {
             <label className="block text-sm font-medium text-slate-700">Notes</label>
             <textarea name="description" value={f.description} onChange={on} rows={4} className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Photo URL (optional)</label>
-            <input name="image" value={f.image} onChange={on} className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+         <div>
+            <label className="block text-sm font-medium text-slate-700">Upload Photo (optional)</label>
+            <input
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={e => setF({ ...f, image: e.target.files[0] })}
+              className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
           </div>
+
           <button disabled={busy} className="mt-2 inline-flex items-center justify-center rounded-full bg-emerald-600 px-6 py-3 font-medium text-white hover:bg-emerald-700 disabled:opacity-60">
             {busy ? "Submitting…" : "Submit Request"}
           </button>

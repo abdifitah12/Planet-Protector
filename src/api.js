@@ -9,16 +9,35 @@ function q(params) {
   });
   return u.toString();
 }
-
 export async function createContact(payload) {
-  const res = await fetch(`${API_BASE}/api/contacts`, {
+  // If no file -> plain JSON endpoint
+  if (!payload.image) {
+    const { image, status, ...json } = payload;
+    const res = await fetch(`${API_BASE}/api/contacts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(json),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  }
+
+  // With file -> multipart endpoint
+  const fd = new FormData();
+  const { image, status, ...json } = payload;
+
+  // MUST be named "data" and typed as JSON so @RequestPart can deserialize
+  fd.append("data", new Blob([JSON.stringify(json)], { type: "application/json" }));
+  fd.append("image", image); // File from <input type="file">
+
+  const res = await fetch(`${API_BASE}/api/contacts/with-image`, {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload),
+    body: fd, // no headers!
   });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
 
 export async function listContacts({page=0, size=10, sortBy="createdAt", direction="DESC"} = {}) {
   const res = await fetch(`${API_BASE}/api/contacts?${q({page, size, sortBy, direction})}`);
@@ -44,10 +63,11 @@ export async function findByPhone(phone) {
   return res.json(); // List<Contact>
 }
 
+ // ---- DETAIL (ContactResponse with imageUrl) ----
 export async function getContact(id) {
   const res = await fetch(`${API_BASE}/api/contacts/${id}`);
   if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return res.json(); // ContactResponse
 }
 
 export async function toggleStatus(id) {
