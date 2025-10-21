@@ -11,6 +11,7 @@ function q(params) {
 }
 
 
+
 export async function createContact(payload) {
   // If no file -> plain JSON endpoint
   if (!payload.image) {
@@ -78,13 +79,13 @@ export async function toggleStatus(id) {
   return res.json();
 }
 
- // src/api.js
 export async function deleteContact(id) {
-  const res = await fetch(`${API_BASE}/api/contacts/delete/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json(); // your controller returns List<Contact>
+  const res = await fetch(`${API_BASE}/api/contacts/delete/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error((await res.text()) || `Failed with ${res.status}`);
+  return; // no body to parse
 }
+
+
+
 
 
