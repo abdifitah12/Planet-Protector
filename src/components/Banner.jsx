@@ -3,12 +3,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Banner({
-  images = ["/bg.png"],
-  headline = (
-    <>
-      Sanitize. Deodorize. <span className="text-emerald-300">Disinfect.</span>
-    </>
-  ),
+  images = ["/bg.png"], // strings or objects: "/bn1.png" OR { type:"video", src:"/hero.mp4" }
+  headline = <>Sanitize. Deodorize. <span className="text-emerald-300">Disinfect.</span></>,
   subtext = "We go beyond surface cleaning — eco-friendly bin sanitizing that protects your family and community.",
   primary = { label: "Book", href: "#contact" },
   secondary = { label: "Services", href: "#services" },
@@ -22,8 +18,8 @@ export default function Banner({
   const count = slides.length || 1;
 
   useEffect(() => {
-    const onVisibility = () => (focusRef.current = !document.hidden);
-    document.addEventListener("visibilitychange", onVisibility);
+    const onVis = () => (focusRef.current = !document.hidden);
+    document.addEventListener("visibilitychange", onVis);
     const id = setInterval(() => {
       if (!hoverRef.current && focusRef.current && count > 1) {
         setIndex((i) => (i + 1) % count);
@@ -31,12 +27,18 @@ export default function Banner({
     }, intervalMs);
     return () => {
       clearInterval(id);
-      document.removeEventListener("visibilitychange", onVisibility);
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, [count, intervalMs]);
 
-  const go = (dir) => setIndex((i) => (i + dir + count) % count);
-  const goTo = (i) => setIndex(i % count);
+  const go   = (dir) => setIndex((i) => (i + dir + count) % count);
+  const goTo = (i)   => setIndex(i % count);
+
+  // Normalize current slide
+  const raw    = slides[index];
+  const entry  = typeof raw === "string" ? { src: raw } : (raw || {});
+  const src    = entry.src || "";
+  const type   = entry.type || (/\.(mp4|webm|ogg)$/i.test(src) ? "video" : "image");
 
   return (
     <section
@@ -46,37 +48,48 @@ export default function Banner({
       onMouseEnter={() => (hoverRef.current = true)}
       onMouseLeave={() => (hoverRef.current = false)}
     >
-      {/* Slides are pinned behind everything */}
+      {/* Slides */}
       <div className="absolute inset-0 z-0">
-        <AnimatePresence initial={false}>
+        <AnimatePresence initial={false} mode="wait">
           <motion.div
-            key={index}
+            key={`${type}:${src}:${index}`}
             className="absolute inset-0"
             initial={{ opacity: 0, scale: 1.02 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
           >
-            <img
-              src={slides[index] || "/bg.png"}
-              alt={`Banner slide ${index + 1}`}
-              className="h-full w-full object-cover"
-              fetchPriority="high"
-            />
-            {/* Overlays must not intercept taps */}
+            {type === "video" ? (
+              <video
+                src={src}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <img
+                src={src || "/bg.png"}
+                alt={`Banner slide ${index + 1}`}
+                className="h-full w-full object-cover"
+                fetchPriority="high"
+              />
+            )}
+
+            {/* overlays */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/10" />
             <div className="pointer-events-none absolute inset-0 bg-emerald-900/0 mix-blend-multiply" />
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Text content */}
+      {/* Text */}
       <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-6">
         <div className="max-w-2xl">
           <motion.h1
             className="text-4xl font-extrabold tracking-tight sm:text-6xl drop-shadow"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
+            initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             {headline}
@@ -84,8 +97,7 @@ export default function Banner({
 
           <motion.p
             className="mt-4 text-lg text-slate-100/90 sm:text-xl max-w-xl"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
+            initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             {subtext}
@@ -93,8 +105,7 @@ export default function Banner({
 
           <motion.div
             className="mt-8 flex flex-wrap gap-3"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
+            initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
             {primary?.href && (
@@ -117,7 +128,6 @@ export default function Banner({
             )}
           </motion.div>
 
-          {/* Highlights */}
           <div className="mt-8 flex flex-wrap gap-4 text-sm text-white/90">
             <span className="rounded-full bg-black/30 px-3 py-1">Eco-friendly</span>
             <span className="rounded-full bg-black/30 px-3 py-1">Hot water pressure</span>
@@ -126,7 +136,7 @@ export default function Banner({
         </div>
       </div>
 
-      {/* Controls (raised above everything, optimized for touch) */}
+      {/* Controls */}
       {count > 1 && (
         <>
           <button
@@ -150,7 +160,7 @@ export default function Banner({
         </>
       )}
 
-      {/* Dots (also above) */}
+      {/* Dots */}
       {count > 1 && (
         <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
           {slides.map((_, i) => (
@@ -158,9 +168,7 @@ export default function Banner({
               key={i}
               onClick={() => goTo(i)}
               aria-label={`Go to slide ${i + 1}`}
-              className={`h-2.5 w-2.5 rounded-full transition ${
-                i === index ? "bg-white" : "bg-white/50 hover:bg-white/80"
-              }`}
+              className={`h-2.5 w-2.5 rounded-full transition ${i === index ? "bg-white" : "bg-white/50 hover:bg-white/80"}`}
               style={{ touchAction: "manipulation" }}
             />
           ))}

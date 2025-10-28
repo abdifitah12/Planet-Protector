@@ -119,8 +119,6 @@ export default function ContactForm() {
             />
           </div>
 
-          
-
           <button 
             disabled={busy} 
             className="mt-2 inline-flex items-center justify-center rounded-full bg-emerald-600 px-6 py-3 font-medium text-white hover:bg-emerald-700 disabled:opacity-60"

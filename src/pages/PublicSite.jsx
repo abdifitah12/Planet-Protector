@@ -98,13 +98,14 @@ export default function PublicSite() {
       <Nav />
 
       {/* Use the new Banner as the hero (replaces <Home />) */}
-      <Banner
-        images={["/bn1.png", "/bn2.png", "/bn3.png"]}
-        headline={<>Sanitize. Deodorize. <span className="text-emerald-300">Disinfect.</span></>}
-        subtext="Family-owned in SeaTac, WA. Safe for kids, pets, and lawns."
-        primary={{ label: "Schedule", href: "#contact" }}
-        secondary={{ label: "See Services", href: "#services" }}
-      />
+              <Banner
+          images={[{ type: "video", src: "/video_trash_truck.mp4" }]}
+          headline={<>Sanitize. Deodorize. <span className="text-emerald-300">Disinfect.</span></>}
+          subtext="Family-owned in SeaTac, WA. Safe for kids, pets, and lawns."
+          primary={{ label: "Schedule", href: "#contact" }}
+          secondary={{ label: "See Services", href: "#services" }}
+        />
+
 
       <main>
         <Services />
