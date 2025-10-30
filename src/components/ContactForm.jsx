@@ -1,36 +1,50 @@
 import React, { useState, useRef } from "react";
 import { createContact } from "../api";
 
-const init = { name:"", email:"", phoneNumber:"", address:"", description:"", image:"", status:null };
+const init = {
+  name: "",
+  email: "",
+  phoneNumber: "",
+  address: "",
+  description: "",
+  image: "",
+  video: "",
+  status: null,
+};
 
 export default function ContactForm() {
   const [f, setF] = useState(init);
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
-  const fileRef = useRef(null); // 👈 added reference
+
+  const fileRef = useRef(null);
+  const videoRef = useRef(null);
 
   const on = (e) => setF({ ...f, [e.target.name]: e.target.value });
 
   async function submit(e) {
     e.preventDefault();
     setMsg(null);
+
     if (!f.name || !f.email || !f.phoneNumber || !f.address) {
-      setMsg({ t:"error", x:"Name, email, phone and address are required." }); 
+      setMsg({
+        t: "error",
+        x: "Name, email, phone, and address are required.",
+      });
       return;
     }
 
     try {
       setBusy(true);
       const saved = await createContact(f);
-      setMsg({ t:"ok", x:`Request received! Ref #${saved.id}.` });
+      setMsg({ t: "ok", x: `Request received! Ref #${saved.id}.` });
       setF(init);
-
-      // ✅ clear uploaded file after submit
       if (fileRef.current) fileRef.current.value = "";
+      if (videoRef.current) videoRef.current.value = "";
     } catch (err) {
-      setMsg({ t:"error", x: err.message || "Failed to submit." });
-    } finally { 
-      setBusy(false); 
+      setMsg({ t: "error", x: err.message || "Failed to submit." });
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -41,9 +55,13 @@ export default function ContactForm() {
         <p className="mt-1 text-slate-600">We’ll confirm by email.</p>
 
         {msg && (
-          <div className={`mt-4 rounded-xl p-3 text-sm ${
-            msg.t==="ok"?"bg-emerald-100 text-emerald-900":"bg-red-100 text-red-800"
-          }`}>
+          <div
+            className={`mt-4 rounded-xl p-3 text-sm ${
+              msg.t === "ok"
+                ? "bg-emerald-100 text-emerald-900"
+                : "bg-red-100 text-red-800"
+            }`}
+          >
             {msg.x}
           </div>
         )}
@@ -51,76 +69,102 @@ export default function ContactForm() {
         <form onSubmit={submit} className="mt-6 grid gap-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Full Name</label>
-              <input 
-                name="name" 
-                value={f.name} 
-                onChange={on} 
-                className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
-                required 
+              <label className="block text-sm font-medium text-slate-700">
+                Full Name
+              </label>
+              <input
+                name="name"
+                value={f.name}
+                onChange={on}
+                className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Phone</label>
-              <input 
-                name="phoneNumber" 
-                value={f.phoneNumber} 
-                onChange={on} 
-                className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
-                required 
+              <label className="block text-sm font-medium text-slate-700">
+                Phone
+              </label>
+              <input
+                name="phoneNumber"
+                value={f.phoneNumber}
+                onChange={on}
+                className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
               />
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Email</label>
-              <input 
-                type="email" 
-                name="email" 
-                value={f.email} 
-                onChange={on} 
-                className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
-                required 
+              <label className="block text-sm font-medium text-slate-700">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={f.email}
+                onChange={on}
+                className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Address</label>
-              <input 
-                name="address" 
-                value={f.address} 
-                onChange={on} 
-                className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
-                required 
+              <label className="block text-sm font-medium text-slate-700">
+                Address
+              </label>
+              <input
+                name="address"
+                value={f.address}
+                onChange={on}
+                className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">Notes</label>
-            <textarea 
-              name="description" 
-              value={f.description} 
-              onChange={on} 
-              rows={4} 
-              className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Upload Photo (optional)</label>
-            <input
-              ref={fileRef} // 👈 attached ref
-              type="file"
-              name="image"
-              accept="image/*"
-              onChange={e => setF({ ...f, image: e.target.files[0] })}
+            <label className="block text-sm font-medium text-slate-700">
+              Notes
+            </label>
+            <textarea
+              name="description"
+              value={f.description}
+              onChange={on}
+              rows={4}
               className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
-          <button 
-            disabled={busy} 
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Upload Photo (optional)
+            </label>
+            <input
+              ref={fileRef}
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={(e) => setF({ ...f, image: e.target.files[0] })}
+              className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Upload Video (optional)
+            </label>
+            <input
+              ref={videoRef}
+              type="file"
+              name="video"
+              accept="video/*"
+              onChange={(e) => setF({ ...f, video: e.target.files[0] })}
+              className="mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <button
+            disabled={busy}
             className="mt-2 inline-flex items-center justify-center rounded-full bg-emerald-600 px-6 py-3 font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
           >
             {busy ? "Submitting…" : "Submit Request"}

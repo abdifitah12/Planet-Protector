@@ -3,11 +3,17 @@ import {
   listContacts, listByStatus, listStatusNotDone,
   findByPhone, getContact, toggleStatus, deleteContact
 } from "../api";
-
-
 import StatusBadge from "./StatusBadge.jsx";
 
 const PAGE_SIZE = 10;
+
+// ---- helpers for media -----------------------------------------------------
+const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
+const resolveMedia = (u) => {
+  if (!u) return null;
+  if (/^https?:\/\//i.test(u)) return u;        // presigned absolute URL from backend
+  return `${API_BASE}/${u.replace(/^\/+/, "")}`; // fallback for relative keys
+};
 
 export default function RequestsAdmin() {
   const [mode, setMode] = useState("ALL");     // ALL | NOT_DONE | STATUS | PHONE
@@ -57,7 +63,7 @@ export default function RequestsAdmin() {
   async function onView(id) {
     setBusy(true);
     try {
-      const c = await getContact(id); // <-- returns ContactResponse with imageUrl
+      const c = await getContact(id); // returns ContactResponse with imageUrl/videoUrl
       setDetail(c);
     } catch (e) {
       setFlash({ type: "error", text: e.message || "Failed to fetch contact" });
@@ -271,29 +277,24 @@ export default function RequestsAdmin() {
                   )}
                 </div>
 
-                <div className="flex flex-col items-start">
-                  {detail.imageUrl ? (
-                    <>
-                      <img
-                        src={detail.imageUrl}
-                        alt="upload"
-                        className="rounded-xl border max-h-72 w-full object-contain bg-slate-50"
-                      />
-                      <a
-                        href={detail.imageUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-2 inline-flex items-center text-sm text-emerald-700 hover:underline"
-                      >
-                        
-                        Open full image
-                      </a>
-                    </>
-                  ) : (
-                    <div className="w-full h-48 rounded-xl border bg-slate-50 grid place-items-center text-slate-400">
-                      No image
-                    </div>
-                  )}
+                {/* Media (image or video) */}
+                <div className="media-box flex flex-col items-center justify-center border rounded-lg p-2">
+                  {(() => {
+                    const imgSrc = resolveMedia(detail.imageUrl ?? detail.image);
+                    const vidSrc = resolveMedia(detail.videoUrl ?? detail.video);
+
+                    if (imgSrc) {
+                      return <img src={imgSrc} alt="Uploaded" className="max-h-60 rounded-md" />;
+                    }
+                    if (vidSrc) {
+                      return (
+                        <video controls src={vidSrc} className="max-h-60 w-full rounded-md">
+                          Your browser does not support the video tag.
+                        </video>
+                      );
+                    }
+                    return <div className="text-gray-400">No image/video</div>;
+                  })()}
                 </div>
               </div>
 
@@ -314,7 +315,6 @@ export default function RequestsAdmin() {
             </div>
           </div>
         )}
-
       </div>
     </section>
   );

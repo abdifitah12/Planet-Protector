@@ -1,7 +1,9 @@
-// Vite env (change for prod):  VITE_API_BASE=http://localhost:8080
-const API_BASE = import.meta.env.VITE_API_BASE ?? "https://planet-protector-dba76d4b6b9b.herokuapp.com";
-//const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
+// --- Base URL ---------------------------------------------------------------
+// In dev put this in your .env file: 
+//  VITE_API_BASE=http://localhost:8080
+const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 
+// --- Helpers ----------------------------------------------------------------
 function q(params) {
   const u = new URLSearchParams();
   Object.entries(params || {}).forEach(([k, v]) => {
@@ -10,12 +12,30 @@ function q(params) {
   return u.toString();
 }
 
+// Optional: simple fetch with timeout
+async function xf(url, init = {}, ms = 30000) {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { ...init, signal: ctrl.signal });
+    if (!res.ok) throw new Error((await res.text()) || `${res.status} ${res.statusText}`);
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+}
 
-
+// --- Create contact ---------------------------------------------------------
+/**
+ * Creates a contact.
+ * If payload contains image and/or video (File objects), it uses the multipart endpoint.
+ * Otherwise it sends plain JSON to the simple create endpoint.
+ */
 export async function createContact(payload) {
-  // If no file -> plain JSON endpoint
-  if (!payload.image) {
-    const { image, status, ...json } = payload;
+  const { image, video, status, ...json } = payload;
+
+  // no media → plain JSON endpoint
+  if (!image && !video) {
     const res = await fetch(`${API_BASE}/api/contacts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -25,67 +45,67 @@ export async function createContact(payload) {
     return res.json();
   }
 
-  // With file -> multipart endpoint
+  // with media → multipart
   const fd = new FormData();
-  const { image, status, ...json } = payload;
-
-  // MUST be named "data" and typed as JSON so @RequestPart can deserialize
   fd.append("data", new Blob([JSON.stringify(json)], { type: "application/json" }));
-  fd.append("image", image); // File from <input type="file">
+  if (image) fd.append("image", image);
+  if (video) fd.append("video", video);
 
-  const res = await fetch(`${API_BASE}/api/contacts/with-image`, {
+  const res = await fetch(`${API_BASE}/api/contacts/with-media`, {
     method: "POST",
-    body: fd, // no headers!
+    body: fd, // DO NOT set Content-Type manually
   });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
-
-export async function listContacts({page=0, size=10, sortBy="createdAt", direction="DESC"} = {}) {
-  const res = await fetch(`${API_BASE}/api/contacts?${q({page, size, sortBy, direction})}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json(); // Spring Page<Contact>
-}
-
-export async function listByStatus(status, {page=0, size=10, sortBy="createdAt", direction="DESC"} = {}) {
-  const res = await fetch(`${API_BASE}/api/contacts/status/${status}?${q({page, size, sortBy, direction})}`);
-  if (!res.ok) throw new Error(await res.text());
+// --- Optional single-upload helpers (for editing existing contact) ----------
+export async function uploadContactImage(id, file) {
+  const fd = new FormData();
+  fd.append("image", file);
+  const res = await xf(`${API_BASE}/api/contacts/${id}/image`, { method: "POST", body: fd });
   return res.json();
 }
 
-export async function listStatusNotDone({page=0, size=10, sortBy="createdAt", direction="DESC"} = {}) {
-  const res = await fetch(`${API_BASE}/api/contacts/status/not-done?${q({page, size, sortBy, direction})}`);
-  if (!res.ok) throw new Error(await res.text());
+export async function uploadContactVideo(id, file) {
+  const fd = new FormData();
+  fd.append("video", file);
+  const res = await xf(`${API_BASE}/api/contacts/${id}/video`, { method: "POST", body: fd });
+  return res.json();
+}
+
+// --- Lists & queries --------------------------------------------------------
+export async function listContacts({ page = 0, size = 10, sortBy = "createdAt", direction = "DESC" } = {}) {
+  const res = await xf(`${API_BASE}/api/contacts?${q({ page, size, sortBy, direction })}`);
+  return res.json(); // Spring Page<Contact>
+}
+
+export async function listByStatus(status, { page = 0, size = 10, sortBy = "createdAt", direction = "DESC" } = {}) {
+  const res = await xf(`${API_BASE}/api/contacts/status/${status}?${q({ page, size, sortBy, direction })}`);
+  return res.json();
+}
+
+export async function listStatusNotDone({ page = 0, size = 10, sortBy = "createdAt", direction = "DESC" } = {}) {
+  const res = await xf(`${API_BASE}/api/contacts/status/not-done?${q({ page, size, sortBy, direction })}`);
   return res.json();
 }
 
 export async function findByPhone(phone) {
-  const res = await fetch(`${API_BASE}/api/contacts/phone/${encodeURIComponent(phone)}`);
-  if (!res.ok) throw new Error(await res.text());
+  const res = await xf(`${API_BASE}/api/contacts/phone/${encodeURIComponent(phone)}`);
   return res.json(); // List<Contact>
 }
 
- // ---- DETAIL (ContactResponse with imageUrl) ----
+// --- Detail / actions -------------------------------------------------------
 export async function getContact(id) {
-  const res = await fetch(`${API_BASE}/api/contacts/${id}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json(); // ContactResponse
+  const res = await xf(`${API_BASE}/api/contacts/${id}`);
+  return res.json(); // ContactResponse (with imageUrl/videoUrl when present)
 }
 
 export async function toggleStatus(id) {
-  const res = await fetch(`${API_BASE}/api/contacts/${id}/status`, { method: "PUT" });
-  if (!res.ok) throw new Error(await res.text());
+  const res = await xf(`${API_BASE}/api/contacts/${id}/status`, { method: "PUT" });
   return res.json();
 }
 
 export async function deleteContact(id) {
-  const res = await fetch(`${API_BASE}/api/contacts/delete/${id}`, { method: "DELETE" });
-  if (!res.ok) throw new Error((await res.text()) || `Failed with ${res.status}`);
-  return; // no body to parse
+  await xf(`${API_BASE}/api/contacts/${id}`, { method: "DELETE" });
 }
-
-
-
-
-
